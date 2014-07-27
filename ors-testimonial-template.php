@@ -71,15 +71,6 @@ function ors_testimonial_excerpt_length( $length ) {
 }
 
 /* short code */
-
-function by_testimonial_type($clauses = '') {
-  global $wpdb, $current_testimonial_type;
-
-  $clauses['where'] .= "and (select {$wpdb->postmeta}.meta_value from {$wpdb->postmeta} where {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID and {$wpdb->postmeta}.meta_key = 'testimonial_type') = '{$current_testimonial_type}'";
-
-  return $clauses;
-}
-
 add_shortcode( 'testimonials', 'testimonials_func' );
 function testimonials_func( $atts ) {
   global $wpdb, $current_testimonial_type;
@@ -92,7 +83,6 @@ function testimonials_func( $atts ) {
     'post_status'     => 'publish'
   );
 
-  add_filter( 'posts_clauses', 'by_testimonial_type' );
   $posts = get_posts($args);
   $output = '<div id="ors-testimonials" class="shortcode">';
 
@@ -111,7 +101,6 @@ function testimonials_func( $atts ) {
 
   $output .= "</div>";
 
-  remove_filter( 'posts_clauses', 'ors_testimonial_query' );
   wp_reset_postdata();
 
   return $output;
