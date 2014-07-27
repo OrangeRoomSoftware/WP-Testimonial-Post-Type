@@ -1,14 +1,22 @@
 <?php
 /*
-Plugin Name: Testimonial Template
+Plugin Name: Testimonial Post Type
 Plugin URI: http://www.orangeroomsoftware.com/website-plugin/
-Version: 1.0
+Version: 2.0
 Author: <a href="http://www.orangeroomsoftware.com/">Orange Room Software</a>
-Description: A template for Templates
+Description: A post type for Templates
 */
 
-# Post Thumbnails
-add_theme_support( ‘post-thumbnails’ );
+define('TESTIMONIAL_PLUGIN_URL', '/wp-content/plugins/' . basename(dirname(__FILE__)) );
+define('TESTIMONIAL_PLUGIN_DIR', dirname(__FILE__));
+
+#
+# Theme supporting filters
+#
+add_theme_support( 'post-thumbnails' );
+add_filter( 'get_the_excerpt', 'do_shortcode' );
+add_filter( 'the_excerpt', 'do_shortcode' );
+add_filter( 'widget_text', 'do_shortcode' );
 
 # Testimonial Stylesheet
 function ors_testimonial_template_stylesheets() {
@@ -45,7 +53,7 @@ function create_testimonial_post_type() {
     'has_archive' => true,
     'hierarchical' => false,
     'menu_position' => 6,
-    'supports' => array('title','editor','thumbnail'),
+    'supports' => array('title','editor','thumbnail','excerpt'),
     'menu_icon' => '/wp-content/plugins/'.basename(dirname(__FILE__)).'/icon.png',
     'rewrite' => array(
       'slug' => 'testimonials',
@@ -54,4 +62,57 @@ function create_testimonial_post_type() {
   );
 
   register_post_type( 'testimonial', $args );
+}
+
+add_filter( 'excerpt_length', 'ors_testimonial_excerpt_length' );
+function ors_testimonial_excerpt_length( $length ) {
+  if ( get_post_type() != 'testimonial' ) return $length;
+  return 10;
+}
+
+/* short code */
+
+function by_testimonial_type($clauses = '') {
+  global $wpdb, $current_testimonial_type;
+
+  $clauses['where'] .= "and (select {$wpdb->postmeta}.meta_value from {$wpdb->postmeta} where {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID and {$wpdb->postmeta}.meta_key = 'testimonial_type') = '{$current_testimonial_type}'";
+
+  return $clauses;
+}
+
+add_shortcode( 'testimonials', 'testimonials_func' );
+function testimonials_func( $atts ) {
+  global $wpdb, $current_testimonial_type;
+
+  $current_testimonial_type  = $atts['type'];
+  $args  = array(
+    'posts_per_page'  => (int) $atts['limit'],
+    'orderby'         => 'rand',
+    'post_type'       => 'testimonial',
+    'post_status'     => 'publish'
+  );
+
+  add_filter( 'posts_clauses', 'by_testimonial_type' );
+  $posts = get_posts($args);
+  $output = '<div id="ors-testimonials" class="shortcode">';
+
+  foreach ( $posts as $post ) {
+    setup_postdata( $post );
+
+    foreach ( get_post_custom($post->ID) as $key => $value ) {
+      $custom[$key] = $value[0];
+    }
+
+    $output .= '<a href="' . get_permalink($post->ID) . '" rel="bookmark" title="' . $post->post_title . '" class="ors-testimonial">';
+    $output .= "<section>&ldquo;" . $post->post_excerpt . "&rdquo;</section>";
+    $output .= "<footer>&mdash;" . $post->post_title . "</footer>";
+    $output .= "</a>";
+  }
+
+  $output .= "</div>";
+
+  remove_filter( 'posts_clauses', 'ors_testimonial_query' );
+  wp_reset_postdata();
+
+  return $output;
 }
