@@ -1,10 +1,1 @@
-.testimonial .body{text-align:justify;color:black;font:normal 10pt/14pt verdana;}
-.testimonial footer{text-align:right;color:#777;font:normal 12pt/14pt Cursive,Arial;}
-
-#ors-testimonials.shortcode .ors-testimonial {
-  margin-bottom: 20px;
-}
-
-#ors-testimonials.shortcode .ors-testimonial footer {
-  text-align: right;
-}
+.testimonial .body{text-align:justify;color:black;font:normal 10pt/14pt verdana;}.testimonial footer{text-align:right;color:#777;font:normal 12pt/14pt Cursive,Arial;}#ors-testimonials.shortcode .ors-testimonial{margin-bottom:20px;}#ors-testimonials.shortcode .ors-testimonial footer{text-align:right;}
